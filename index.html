@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XtremeGang</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+<!-- ============================================================
+     FIREBASE SDKs (compat build — simplest to wire up by hand)
+     ============================================================ -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<style>
+/* =========================================================
+   TOKENS
+   ---------------------------------------------------------
+   bg-void      #05050b   deep background
+   bg-panel     #0c0c16   card / panel surface
+   bg-panel-2   #12121f   raised panel
+   line         #1e1e30   hairline borders
+   neon-blue    #22d3ff   "Xtreme" / primary accent
+   neon-red     #ff2d55   "Gang" / danger-accent
+   neon-violet  #8b5cf6   chain-link accent
+   text-hi      #eef0ff   primary text
+   text-mid     #8d8fb3   secondary text
+   text-low     #4c4d68   disabled / faint
+   ========================================================= */
+:root{
+  --bg-void:#05050b;
+  --bg-panel:#0c0c16;
+  --bg-panel-2:#12121f;
+  --line:#1e1e30;
+  --neon-blue:#22d3ff;
+  --neon-blue-dim:#0e6d85;
+  --neon-red:#ff2d55;
+  --neon-red-dim:#7a1030;
+  --neon-violet:#8b5cf6;
+  --text-hi:#eef0ff;
+  --text-mid:#8d8fb3;
+  --text-low:#4c4d68;
+  --font-display:'Orbitron', sans-serif;
+  --font-body:'Rajdhani', sans-serif;
+  --font-mono:'Share Tech Mono', monospace;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  background:var(--bg-void);
+  color:var(--text-hi);
+  font-family:var(--font-body);
+  overflow-x:hidden;
+  min-height:100vh;
+}
+
+/* faint scanline / grid atmosphere over everything */
+body::before{
+  content:"";
+  position:fixed; inset:0;
+  pointer-events:none;
+  z-index:0;
+  background-image:
+    linear-gradient(rgba(34,211,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34,211,255,0.035) 1px, transparent 1px);
+  background-size:42px 42px;
+  mask-image:radial-gradient(ellipse at 50% 30%, black 0%, transparent 75%);
+}
+
+::selection{background:var(--neon-blue); color:#05050b;}
+::-webkit-scrollbar{width:10px;}
+::-webkit-scrollbar-track{background:var(--bg-void);}
+::-webkit-scrollbar-thumb{background:var(--neon-blue-dim); border-radius:0;}
+
+a{color:inherit; text-decoration:none;}
+button{font-family:inherit; cursor:pointer;}
+input{font-family:inherit;}
+
+.hidden{display:none !important;}
+
+/* =========================================================
+   INTRO / STARTUP SCREEN
+   ========================================================= */
+#intro-screen{
+  position:fixed; inset:0;
+  z-index:100;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  background:
+    radial-gradient(ellipse at 50% 40%, #0b0f1c 0%, #05050b 70%);
+  overflow:hidden;
+}
+
+.intro-stage{
+  position:relative;
+  display:flex; align-items:center; justify-content:center;
+  height:150px;
+  width:100%;
+}
+
+/* ---- WORD 1: XtremeGang ---- */
+.word1{
+  position:relative;
+  display:flex;
+  align-items:baseline;
+  font-family:var(--font-display);
+  font-weight:900;
+  font-size:clamp(2.6rem, 8vw, 5.5rem);
+  letter-spacing:2px;
+}
+
+.x-letter{
+  color:var(--neon-blue);
+  text-shadow:0 0 12px var(--neon-blue), 0 0 34px rgba(34,211,255,0.6);
+  transform:translateX(-140vw);
+  opacity:0;
+}
+.x-letter.run{
+  animation:slideInX 0.5s cubic-bezier(.19,1,.22,1) forwards;
+}
+@keyframes slideInX{
+  0%{transform:translateX(-140vw); opacity:0;}
+  100%{transform:translateX(0); opacity:1;}
+}
+
+/* the chain that carries "treme" down and snaps */
+.chain-wrap{
+  position:relative;
+  display:inline-block;
+  color:var(--neon-blue);
+  text-shadow:0 0 12px var(--neon-blue), 0 0 34px rgba(34,211,255,0.6);
+  opacity:0;
+  transform:translateY(-90px);
+}
+.chain-wrap.drop{
+  animation:chainDrop 0.9s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+.chain-wrap.settle{
+  animation:chainSettle 0.5s ease-out forwards;
+}
+@keyframes chainDrop{
+  0%{opacity:0; transform:translateY(-90px);}
+  60%{opacity:1; transform:translateY(6px);}
+  100%{opacity:1; transform:translateY(0);}
+}
+@keyframes chainSettle{
+  0%{opacity:1; transform:translateY(0) rotate(0);}
+  30%{opacity:1; transform:translateY(3px) rotate(-2deg);}
+  60%{opacity:1; transform:translateY(-2px) rotate(2deg);}
+  100%{opacity:1; transform:translateY(0) rotate(0);}
+}
+
+.chain-link{
+  position:absolute;
+  top:-46px;
+  width:3px;
+  height:44px;
+  background:linear-gradient(var(--neon-violet), #4c3a8f);
+  box-shadow:0 0 8px var(--neon-violet);
+  transform-origin:top center;
+}
+.chain-link.left{left:6px;}
+.chain-link.right{right:6px;}
+.chain-link.snap-left{
+  animation:snapLeft 0.55s ease-in forwards;
+}
+.chain-link.snap-right{
+  animation:snapRight 0.55s ease-in forwards;
+}
+@keyframes snapLeft{
+  0%{transform:rotate(0) translateY(0); opacity:1;}
+  100%{transform:rotate(-70deg) translateY(60px) translateX(-40px); opacity:0;}
+}
+@keyframes snapRight{
+  0%{transform:rotate(0) translateY(0); opacity:1;}
+  100%{transform:rotate(70deg) translateY(60px) translateX(40px); opacity:0;}
+}
+
+.gang-letter{
+  color:var(--neon-red);
+  text-shadow:0 0 12px var(--neon-red), 0 0 34px rgba(255,45,85,0.6);
+  opacity:0;
+  margin-left:6px;
+}
+.gang-letter.run{
+  animation:revealGang 0.9s ease-out forwards;
+}
+@keyframes revealGang{
+  0%{opacity:0; letter-spacing:14px; filter:blur(6px);}
+  100%{opacity:1; letter-spacing:2px; filter:blur(0);}
+}
+
+/* ---- WORD 2: By SaumyaXtreme ---- */
+.word2{
+  margin-top:18px;
+  display:flex;
+  gap:10px;
+  font-family:var(--font-body);
+  font-weight:600;
+  font-size:clamp(1rem, 3vw, 1.5rem);
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:var(--text-mid);
+}
+.by-word{ transform:translateX(-60vw); opacity:0; }
+.author-word{
+  transform:translateX(60vw); opacity:0;
+  color:var(--neon-blue);
+}
+.by-word.run{ animation:inLeft 0.5s ease-out forwards; }
+.author-word.run{ animation:inRight 0.5s ease-out forwards; }
+@keyframes inLeft{ to{ transform:translateX(0); opacity:1; } }
+@keyframes inRight{ to{ transform:translateX(0); opacity:1; } }
+
+.word2.zoom{ animation:zoomPulse 0.6s ease-in-out; }
+@keyframes zoomPulse{
+  0%{transform:scale(1);}
+  50%{transform:scale(1.22); text-shadow:0 0 18px var(--neon-blue);}
+  100%{transform:scale(1);}
+}
+
+/* ---- tips ---- */
+.tip-line{
+  margin-top:34px;
+  height:24px;
+  font-family:var(--font-mono);
+  font-size:0.85rem;
+  color:var(--text-mid);
+  text-align:center;
+  max-width:640px;
+  padding:0 16px;
+  opacity:0;
+}
+.tip-line.show{ animation:tipFade 1.1s ease-in-out forwards; }
+@keyframes tipFade{
+  0%{opacity:0; transform:translateY(6px);}
+  15%{opacity:1; transform:translateY(0);}
+  85%{opacity:1;}
+  100%{opacity:0; transform:translateY(-6px);}
+}
+
+/* ---- progress bar ---- */
+.progress-track{
+  position:absolute;
+  bottom:60px;
+  left:50%;
+  transform:translateX(-50%);
+  width:min(420px, 70vw);
+  height:3px;
+  background:var(--line);
+  overflow:hidden;
+}
+.progress-fill{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg, var(--neon-blue), var(--neon-red));
+  box-shadow:0 0 10px var(--neon-blue);
+  transition:width linear;
+}
+
+/* =========================================================
+   LOGIN / REGISTER SCREEN
+   ========================================================= */
+#auth-screen{
+  position:fixed; inset:0;
+  z-index:90;
+  display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(ellipse at 50% 20%, #0b0f1c 0%, #05050b 65%);
+  padding:24px;
+}
+
+.auth-box{
+  position:relative;
+  width:100%;
+  max-width:400px;
+  background:var(--bg-panel);
+  border:1px solid var(--line);
+  padding:38px 32px 32px;
+  box-shadow:0 0 0 1px rgba(34,211,255,0.06), 0 0 40px rgba(34,211,255,0.08);
+}
+.auth-box::before{
+  content:"";
+  position:absolute; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg, var(--neon-blue), var(--neon-red));
+}
+.auth-box::after{
+  content:"";
+  position:absolute; inset:0;
+  pointer-events:none;
+  border:1px solid transparent;
+  box-shadow:inset 0 0 30px rgba(34,211,255,0.04);
+}
+
+.auth-heading{
+  font-family:var(--font-display);
+  font-weight:900;
+  font-size:1.6rem;
+  text-align:center;
+  letter-spacing:1px;
+  margin-bottom:2px;
+}
+.auth-heading .hx{color:var(--neon-blue); text-shadow:0 0 10px var(--neon-blue);}
+.auth-heading .hg{color:var(--neon-red); text-shadow:0 0 10px var(--neon-red);}
+.auth-sub{
+  text-align:center;
+  color:var(--text-low);
+  font-size:0.72rem;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  font-family:var(--font-mono);
+  margin-bottom:26px;
+}
+
+.field{ margin-bottom:16px; }
+.field label{
+  display:block;
+  font-size:0.72rem;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--text-mid);
+  margin-bottom:6px;
+  font-family:var(--font-mono);
+}
+.field input{
+  width:100%;
+  background:var(--bg-panel-2);
+  border:1px solid var(--line);
+  color:var(--text-hi);
+  padding:10px 12px;
+  font-size:0.95rem;
+  outline:none;
+  transition:border-color .2s, box-shadow .2s;
+}
+.field input:focus{
+  border-color:var(--neon-blue);
+  box-shadow:0 0 0 1px var(--neon-blue), 0 0 12px rgba(34,211,255,0.35);
+}
+.field input:focus-visible{
+  outline:2px solid var(--neon-blue);
+  outline-offset:2px;
+}
+
+/* captcha row */
+.captcha-row{ display:flex; gap:10px; align-items:center; margin-bottom:16px; }
+#captcha-canvas{
+  background:var(--bg-panel-2);
+  border:1px solid var(--line);
+  flex-shrink:0;
+}
+.captcha-refresh{
+  background:transparent;
+  border:1px solid var(--line);
+  color:var(--neon-blue);
+  width:38px; height:38px;
+  font-size:1rem;
+  flex-shrink:0;
+  transition:border-color .2s, box-shadow .2s;
+}
+.captcha-refresh:hover{ border-color:var(--neon-blue); box-shadow:0 0 10px rgba(34,211,255,0.4); }
+
+.auth-submit{
+  width:100%;
+  margin-top:8px;
+  padding:12px;
+  background:linear-gradient(90deg, var(--neon-blue-dim), var(--neon-red-dim));
+  border:1px solid var(--neon-blue);
+  color:var(--text-hi);
+  font-family:var(--font-display);
+  font-weight:700;
+  letter-spacing:2px;
+  font-size:0.85rem;
+  text-transform:uppercase;
+  transition:transform .15s, box-shadow .15s;
+}
+.auth-submit:hover{ box-shadow:0 0 20px rgba(34,211,255,0.5); transform:translateY(-1px); }
+.auth-submit:active{ transform:translateY(0); }
+.auth-submit:disabled{ opacity:0.5; cursor:not-allowed; transform:none; box-shadow:none; }
+
+.auth-switch{
+  text-align:center;
+  margin-top:18px;
+  font-size:0.85rem;
+  color:var(--text-mid);
+}
+.auth-switch button{
+  background:none; border:none;
+  color:var(--neon-blue);
+  font-weight:600;
+  padding:0; margin-left:4px;
+}
+.auth-switch button:hover{ text-decoration:underline; }
+
+.auth-message{
+  min-height:20px;
+  text-align:center;
+  font-family:var(--font-mono);
+  font-size:0.78rem;
+  margin-bottom:14px;
+  letter-spacing:0.5px;
+}
+.auth-message.error{ color:var(--neon-red); }
+.auth-message.ok{ color:#3ee08a; }
+
+/* =========================================================
+   MAIN SITE / NAV
+   ========================================================= */
+#main-site{ min-height:100vh; position:relative; z-index:1; }
+
+.navbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 28px;
+  height:64px;
+  background:var(--bg-panel);
+  border-bottom:1px solid var(--line);
+  position:sticky; top:0; z-index:50;
+}
+.brand{
+  font-family:var(--font-display);
+  font-weight:900;
+  font-size:1.15rem;
+  letter-spacing:1px;
+}
+.brand .bx{color:var(--neon-blue); text-shadow:0 0 8px var(--neon-blue);}
+.brand .bg{color:var(--neon-red); text-shadow:0 0 8px var(--neon-red);}
+
+.nav-links{ display:flex; align-items:center; gap:6px; list-style:none; }
+.nav-links > li{ position:relative; }
+.nav-links > li > a{
+  display:block;
+  padding:10px 14px;
+  font-size:0.85rem;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  color:var(--text-mid);
+  font-weight:600;
+  border-bottom:2px solid transparent;
+  transition:color .2s, border-color .2s;
+}
+.nav-links > li > a:hover,
+.nav-links > li > a:focus-visible{ color:var(--neon-blue); border-color:var(--neon-blue); }
+
+/* hamburger trigger — sits after XtremeAI with a visible gap, per spec */
+.hamburger-item{ margin-left:18px; }
+.hamburger-btn{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:5px;
+  width:38px;
+  height:38px;
+  background:transparent;
+  border:1px solid var(--line);
+  padding:0;
+  transition:border-color .2s, box-shadow .2s;
+}
+.hamburger-btn span{
+  display:block;
+  width:18px;
+  height:2px;
+  background:var(--neon-blue);
+  box-shadow:0 0 6px var(--neon-blue);
+  transition:transform .2s, opacity .2s;
+}
+.hamburger-btn:hover,
+.hamburger-item:focus-within .hamburger-btn{
+  border-color:var(--neon-blue);
+  box-shadow:0 0 12px rgba(34,211,255,0.35);
+}
+.hamburger-item:hover .hamburger-btn span:nth-child(1),
+.hamburger-item:focus-within .hamburger-btn span:nth-child(1){ transform:translateY(1px) rotate(6deg); }
+.hamburger-item:hover .hamburger-btn span:nth-child(3),
+.hamburger-item:focus-within .hamburger-btn span:nth-child(3){ transform:translateY(-1px) rotate(-6deg); }
+
+.dropdown{
+  position:absolute;
+  top:100%; right:0;
+  min-width:220px;
+  background:var(--bg-panel-2);
+  border:1px solid var(--line);
+  border-top:2px solid var(--neon-red);
+  display:none;
+  flex-direction:column;
+  padding:6px 0;
+  box-shadow:0 12px 30px rgba(0,0,0,0.6);
+  z-index:60;
+}
+.hamburger-item:hover .dropdown,
+.hamburger-item:focus-within .dropdown{ display:flex; }
+.dropdown a{
+  padding:10px 16px;
+  font-size:0.82rem;
+  color:var(--text-mid);
+  letter-spacing:0.5px;
+}
+.dropdown a:hover{ color:var(--neon-blue); background:rgba(34,211,255,0.06); }
+
+.profile-chip{
+  display:flex; align-items:center; gap:10px;
+  padding:6px 12px 6px 6px;
+  border:1px solid var(--line);
+  background:var(--bg-panel-2);
+}
+.profile-chip img{
+  width:30px; height:30px; border-radius:50%;
+  border:1px solid var(--neon-blue);
+  object-fit:cover;
+}
+.profile-chip span{ font-size:0.85rem; font-weight:600; }
+
+.hero{
+  padding:90px 28px;
+  text-align:center;
+}
+.hero h1{
+  font-family:var(--font-display);
+  font-size:clamp(2rem,6vw,3.4rem);
+  font-weight:900;
+  letter-spacing:1px;
+}
+.hero h1 .hx{color:var(--neon-blue); text-shadow:0 0 14px var(--neon-blue);}
+.hero h1 .hg{color:var(--neon-red); text-shadow:0 0 14px var(--neon-red);}
+.hero p{
+  margin-top:16px;
+  color:var(--text-mid);
+  font-size:1.05rem;
+  max-width:560px;
+  margin-left:auto; margin-right:auto;
+}
+.hero-actions{ margin-top:30px; display:flex; gap:14px; justify-content:center; }
+.btn-ghost{
+  padding:12px 22px;
+  border:1px solid var(--neon-blue);
+  color:var(--neon-blue);
+  font-family:var(--font-display);
+  font-size:0.8rem;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  background:transparent;
+  transition:box-shadow .2s;
+}
+.btn-ghost:hover{ box-shadow:0 0 18px rgba(34,211,255,0.5); }
+.btn-solid{
+  padding:12px 22px;
+  border:1px solid var(--neon-red);
+  color:#fff;
+  background:var(--neon-red-dim);
+  font-family:var(--font-display);
+  font-size:0.8rem;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  transition:box-shadow .2s;
+}
+.btn-solid:hover{ box-shadow:0 0 18px rgba(255,45,85,0.5); }
+
+@media (max-width:900px){
+  .nav-links{ display:none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     INTRO / STARTUP ANIMATION
+     ============================================================ -->
+<div id="intro-screen">
+  <div class="intro-stage">
+    <div class="word1" id="word1">
+      <span class="x-letter" id="x-letter">X</span>
+      <span class="chain-wrap" id="chain-wrap">
+        <span class="chain-link left" id="chain-left"></span>
+        <span class="chain-link right" id="chain-right"></span>
+        treme
+      </span>
+      <span class="gang-letter" id="gang-letter">Gang</span>
+    </div>
+  </div>
+
+  <div class="word2" id="word2">
+    <span class="by-word" id="by-word">By</span>
+    <span class="author-word" id="author-word">SaumyaXtreme</span>
+  </div>
+
+  <div class="tip-line" id="tip-line"></div>
+
+  <div class="progress-track">
+    <div class="progress-fill" id="progress-fill"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     LOGIN / REGISTER
+     ============================================================ -->
+<div id="auth-screen" class="hidden">
+  <div class="auth-box">
+
+    <!-- LOGIN FORM -->
+    <form id="login-form">
+      <h1 class="auth-heading"><span class="hx">Xtreme</span><span class="hg">Gang</span></h1>
+      <p class="auth-sub">Member Login</p>
+      <p class="auth-message" id="login-message"></p>
+
+      <div class="field">
+        <label for="login-username">Username</label>
+        <input id="login-username" type="text" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="login-password">Password</label>
+        <input id="login-password" type="password" autocomplete="current-password" required>
+      </div>
+
+      <div class="field">
+        <label for="login-captcha">Captcha</label>
+        <div class="captcha-row">
+          <canvas id="captcha-canvas" width="130" height="42"></canvas>
+          <button type="button" class="captcha-refresh" id="captcha-refresh" title="New captcha" aria-label="Generate new captcha">&#8635;</button>
+          <input id="login-captcha" type="text" placeholder="Enter code" required style="flex:1;">
+        </div>
+      </div>
+
+      <button type="submit" class="auth-submit" id="login-submit">Enter</button>
+
+      <p class="auth-switch">New here?
+        <button type="button" id="show-register">Create an account</button>
+      </p>
+    </form>
+
+    <!-- REGISTRATION FORM -->
+    <form id="register-form" class="hidden">
+      <h1 class="auth-heading"><span class="hx">Xtreme</span><span class="hg">Gang</span></h1>
+      <p class="auth-sub">New Recruit Registration</p>
+      <p class="auth-message" id="register-message"></p>
+
+      <div class="field">
+        <label for="reg-username">Username</label>
+        <input id="reg-username" type="text" autocomplete="username" required minlength="3" maxlength="20">
+      </div>
+      <div class="field">
+        <label for="reg-email">Email</label>
+        <input id="reg-email" type="email" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label for="reg-password">Password</label>
+        <input id="reg-password" type="password" autocomplete="new-password" required minlength="6">
+      </div>
+
+      <button type="submit" class="auth-submit" id="register-submit">Register</button>
+
+      <p class="auth-switch">Already a member?
+        <button type="button" id="show-login">Log in</button>
+      </p>
+    </form>
+
+  </div>
+</div>
+
+<!-- ============================================================
+     MAIN SITE
+     ============================================================ -->
+<div id="main-site" class="hidden">
+  <nav class="navbar">
+    <div class="brand"><span class="bx">Xtreme</span><span class="bg">Gang</span></div>
+
+    <ul class="nav-links">
+      <li><a href="#home">Home</a></li>
+      <li><a href="#about">About us</a></li>
+      <li><a href="#shop">Shop</a></li>
+      <li><a href="#xtremeai">XtremeAI</a></li>
+      <li class="hamburger-item" tabindex="0">
+        <button class="hamburger-btn" aria-label="Open menu" aria-haspopup="true">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="dropdown">
+          <a href="#rules">Rules and Regulations</a>
+          <a href="#terms">Terms and conditions</a>
+          <a href="#libraries">Work Libraries</a>
+          <a href="#leaderboard">Leaderboard</a>
+          <a href="#points">Pointings System</a>
+          <a href="#rankings">Rankings</a>
+          <a href="#payment">Payment App</a>
+          <a href="#bank">Bank Account</a>
+          <a href="#panel">Personal Panel</a>
+          <a href="#chats">XtremeChats</a>
+        </div>
+      </li>
+    </ul>
+
+    <div class="profile-chip">
+      <img id="profile-pic" src="https://api.dicebear.com/7.x/identicon/svg?seed=guest" alt="">
+      <span id="profile-name">Guest</span>
+    </div>
+  </nav>
+
+  <section class="hero" id="home">
+    <h1><span class="hx">Xtreme</span><span class="hg">Gang</span></h1>
+    <p>Dominate the fields together. Earn points, climb the rankings, and let XtremeAI handle whatever's holding you up.</p>
+    <div class="hero-actions">
+      <button class="btn-ghost" onclick="location.hash='#leaderboard'">View Leaderboard</button>
+      <button class="btn-solid" id="logout-btn">Log out</button>
+    </div>
+  </section>
+</div>
+
+<script>
+/* =========================================================
+   FIREBASE SETUP
+   ---------------------------------------------------------
+   Replace this with the config object from your Firebase
+   project console: Project settings → General → Your apps.
+   ========================================================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyD-u50ij6h1s9e0cg3K89fdVjR44gL_df0",
+  authDomain: "xtremegang-e3f2b.firebaseapp.com",
+  projectId: "xtremegang-e3f2b",
+  storageBucket: "xtremegang-e3f2b.firebasestorage.app",
+  messagingSenderId: "368252832811",
+  appId: "1:368252832811:web:3d52d418b0517ed4eb6e6e",
+  measurementId: "G-69PL7NNCRK"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// On file:// pages (opening the HTML directly instead of via a real
+// server) the browser can restrict IndexedDB, which is what LOCAL
+// persistence relies on — this falls back to SESSION so auth calls
+// still resolve instead of hanging indefinitely.
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {
+  return auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
+});
+
+// wraps a promise so it rejects after `ms` instead of hanging forever
+function withTimeout(promise, ms, timeoutMessage){
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(timeoutMessage)), ms))
+  ]);
+}
+
+/* Firestore layout:
+   usernames/{usernameLowercase}  -> { uid, email, createdAt }
+   Registration is only allowed to succeed when this document
+   does not already exist, which is how "one username cannot
+   be registered again" is enforced. The write happens inside
+   a transaction so two simultaneous signups can't both win.
+*/
+
+/* =========================================================
+   INTRO ANIMATION SEQUENCE
+   ========================================================= */
+const TIP_POOL = [
+  "Lets dominate the fields together and tell who is better.",
+  "You can earn disciplinary points for being in discipline more than 2 days.",
+  "Do you know? There also exist helping points!",
+  "Normal Users gets 2 points/day increasing plans is better opinion.",
+  "We also provides you loan upto 200 points as limit!",
+  "Ranks in our team is decided by our points.",
+  "Aw! Is your work incomplete dont worry you can check Libraries of people!",
+  "Dont foget to read rules and regulations for better choices.",
+  "Read more about XtremeGang on about us page.",
+  "Lets go! We are having events to earn points and money!",
+  "You know what you can talk to members in chat section.",
+  "Bro having problem? Ask your personal helper friend XtremeAI!",
+  "XtremeAI is made for solving complex problems.",
+  "XtremeGang's founder is SaumyaXtreme.",
+  "Find a bug? Tell us in our chat we'll try to fix it soon as possible.",
+  "Are you bored of studying then play chat hames with XtremeAI!"
+];
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function runIntro(){
+  const xLetter = document.getElementById('x-letter');
+  const chainWrap = document.getElementById('chain-wrap');
+  const chainLeft = document.getElementById('chain-left');
+  const chainRight = document.getElementById('chain-right');
+  const gangLetter = document.getElementById('gang-letter');
+  const word2 = document.getElementById('word2');
+  const byWord = document.getElementById('by-word');
+  const authorWord = document.getElementById('author-word');
+  const tipLine = document.getElementById('tip-line');
+  const progressFill = document.getElementById('progress-fill');
+
+  const TOTAL_MS = 9500; // full run before the bar is "complete"
+
+  // progress bar fills smoothly across the whole sequence
+  progressFill.style.transitionDuration = TOTAL_MS + 'ms';
+  requestAnimationFrame(() => { progressFill.style.width = '100%'; });
+
+  // 1. X slides in (0 - 0.5s)
+  xLetter.classList.add('run');
+
+  // 2. chain drops holding "treme", then snaps and retracts (1.0 - 2.5s)
+  setTimeout(() => {
+    chainWrap.classList.add('drop');
+  }, 1000);
+
+  setTimeout(() => {
+    // lock the visible state with an inline style so "treme" can never
+    // fall back to the base opacity:0 once the 'drop' class is removed
+    chainWrap.style.opacity = '1';
+    chainWrap.style.transform = 'translateY(0)';
+    chainWrap.classList.remove('drop');
+    chainWrap.classList.add('settle');
+  }, 1900);
+
+  setTimeout(() => {
+    chainWrap.classList.remove('settle');
+  }, 2400);
+
+  setTimeout(() => {
+    // only the two chain-link bars fade out here — the "treme"
+    // text stays put, this never touches chainWrap's own opacity
+    chainLeft.classList.add('snap-left');
+    chainRight.classList.add('snap-right');
+  }, 2300);
+
+  // 3. Gang reveals once Xtreme is fully assembled (2.5 - 3.0s)
+  //    and is then locked visible — only the chain links fade,
+  //    "Gang" itself is never touched by that animation.
+  setTimeout(() => {
+    gangLetter.classList.add('run');
+    setTimeout(() => {
+      gangLetter.style.opacity = '1';
+      gangLetter.style.animation = 'none';
+    }, 900);
+  }, 2500);
+
+  // 4. "By" / "SaumyaXtreme" slide in, then zoom-pulse (3.0 - 4.5s)
+  setTimeout(() => {
+    byWord.classList.add('run');
+    authorWord.classList.add('run');
+  }, 3000);
+
+  setTimeout(() => {
+    word2.classList.add('zoom');
+  }, 3600);
+
+  // 5. random, non-repeating tips for 5 seconds (4.5 - 9.5s)
+  setTimeout(() => {
+    const picks = shuffle(TIP_POOL);
+    const windowMs = 5000;
+    const perTip = 1250; // spacing between tip changes
+    const count = Math.min(picks.length, Math.floor(windowMs / perTip));
+    for(let i = 0; i < count; i++){
+      setTimeout(() => {
+        tipLine.textContent = picks[i];
+        tipLine.classList.remove('show');
+        void tipLine.offsetWidth; // restart animation
+        tipLine.classList.add('show');
+      }, i * perTip);
+    }
+  }, 4500);
+
+  // 6. bar is full at ~9.5s, wait 1.5s more, then launch login
+  setTimeout(() => {
+    document.getElementById('intro-screen').style.transition = 'opacity .5s ease';
+    document.getElementById('intro-screen').style.opacity = '0';
+    setTimeout(() => {
+      document.getElementById('intro-screen').classList.add('hidden');
+      document.getElementById('auth-screen').classList.remove('hidden');
+    }, 500);
+  }, TOTAL_MS + 1500);
+}
+
+/* =========================================================
+   CAPTCHA
+   ========================================================= */
+let currentCaptcha = '';
+
+function drawCaptcha(){
+  const canvas = document.getElementById('captcha-canvas');
+  const ctx = canvas.getContext('2d');
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  currentCaptcha = Array.from({length: 5}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#12121f';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // noise lines
+  for(let i = 0; i < 6; i++){
+    ctx.strokeStyle = `rgba(34,211,255,${0.15 + Math.random() * 0.2})`;
+    ctx.beginPath();
+    ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
+    ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height);
+    ctx.stroke();
+  }
+
+  // characters
+  for(let i = 0; i < currentCaptcha.length; i++){
+    ctx.save();
+    const x = 14 + i * 22;
+    const y = 28 + (Math.random() * 6 - 3);
+    ctx.translate(x, y);
+    ctx.rotate((Math.random() * 30 - 15) * Math.PI / 180);
+    ctx.font = 'bold 22px Share Tech Mono, monospace';
+    ctx.fillStyle = i % 2 === 0 ? '#22d3ff' : '#ff2d55';
+    ctx.fillText(currentCaptcha[i], 0, 0);
+    ctx.restore();
+  }
+
+  // noise dots
+  for(let i = 0; i < 30; i++){
+    ctx.fillStyle = `rgba(238,240,255,${Math.random() * 0.3})`;
+    ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, 1.5, 1.5);
+  }
+}
+
+document.getElementById('captcha-refresh').addEventListener('click', drawCaptcha);
+
+/* =========================================================
+   AUTH SCREEN SWITCHING
+   ========================================================= */
+document.getElementById('show-register').addEventListener('click', () => {
+  document.getElementById('login-form').classList.add('hidden');
+  document.getElementById('register-form').classList.remove('hidden');
+});
+document.getElementById('show-login').addEventListener('click', () => {
+  document.getElementById('register-form').classList.add('hidden');
+  document.getElementById('login-form').classList.remove('hidden');
+  drawCaptcha();
+});
+
+function setMessage(id, text, kind){
+  const el = document.getElementById(id);
+  el.textContent = text || '';
+  el.classList.remove('error', 'ok');
+  if(kind) el.classList.add(kind);
+}
+
+/* =========================================================
+   REGISTRATION
+   The account is created FIRST so the person is authenticated,
+   then the username is claimed inside a transaction using the
+   lowercased username as the Firestore document ID — a
+   duplicate claim always fails, so a username can never be
+   registered twice even under simultaneous signups. If the
+   username turns out to be taken, the freshly created account
+   is rolled back so nothing is left half-registered.
+   ========================================================= */
+document.getElementById('register-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const submitBtn = document.getElementById('register-submit');
+  const username = document.getElementById('reg-username').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const usernameKey = username.toLowerCase();
+
+  if(!/^[a-zA-Z0-9_]{3,20}$/.test(username)){
+    setMessage('register-message', 'Username: 3-20 letters, numbers or underscores only.', 'error');
+    return;
+  }
+
+  submitBtn.disabled = true;
+  setMessage('register-message', 'Creating account...', null);
+  registrationInProgress = true;
+
+  const usernameRef = db.collection('usernames').doc(usernameKey);
+  let cred;
+
+  // step 1: create the auth account (this is what makes request.auth
+  // non-null, which the Firestore rules require for the next step)
+  try {
+    cred = await withTimeout(
+      auth.createUserWithEmailAndPassword(email, password),
+      12000,
+      'TIMEOUT'
+    );
+  } catch (err) {
+    registrationInProgress = false;
+    submitBtn.disabled = false;
+    let msg = err.message || 'Registration failed.';
+    if(err.code === 'auth/email-already-in-use') msg = 'That email is already registered.';
+    else if(err.message === 'TIMEOUT') msg = 'Taking too long to reach the server. If you opened this file directly (file://), try running it through a local server instead.';
+    setMessage('register-message', msg, 'error');
+    return;
+  }
+
+  setMessage('register-message', 'Claiming username...', null);
+
+  // step 2: claim the username, inside a transaction so a duplicate
+  // claim always fails even if two people submit at the same instant
+  try {
+    await db.runTransaction(async (tx) => {
+      const doc = await tx.get(usernameRef);
+      if(doc.exists){
+        throw new Error('USERNAME_TAKEN');
+      }
+      tx.set(usernameRef, {
+        uid: cred.user.uid,
+        email: email,
+        username: username,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    });
+  } catch (err) {
+    // username was taken (or the write failed) — roll back the account
+    // we just created so nothing is left half-registered
+    await cred.user.delete().catch(() => {});
+    registrationInProgress = false;
+    submitBtn.disabled = false;
+    if(err.message === 'USERNAME_TAKEN'){
+      setMessage('register-message', 'That username is already registered.', 'error');
+    } else {
+      setMessage('register-message', 'Could not reach the server. Try again.', 'error');
+    }
+    return;
+  }
+
+  await cred.user.updateProfile({ displayName: username });
+
+  setMessage('register-message', 'Account created! You can log in now.', 'ok');
+  submitBtn.disabled = false;
+
+  // the account was created while filling this form, so it's already
+  // signed in — sign out again so the person lands back on login
+  await auth.signOut();
+  registrationInProgress = false;
+
+  setTimeout(() => {
+    document.getElementById('register-form').reset();
+    document.getElementById('register-form').classList.add('hidden');
+    document.getElementById('login-form').classList.remove('hidden');
+    drawCaptcha();
+  }, 1200);
+});
+
+/* =========================================================
+   LOGIN
+   Firebase Auth signs in with an email, so the username the
+   member types is first resolved to its email via Firestore.
+   ========================================================= */
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const submitBtn = document.getElementById('login-submit');
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const captchaInput = document.getElementById('login-captcha').value.trim();
+
+  if(captchaInput.toUpperCase() !== currentCaptcha.toUpperCase()){
+    setMessage('login-message', 'XtremeGang autorization failed.', 'error');
+    drawCaptcha();
+    document.getElementById('login-captcha').value = '';
+    return;
+  }
+
+  submitBtn.disabled = true;
+  setMessage('login-message', 'Signing in...', null);
+
+  try {
+    const doc = await withTimeout(
+      db.collection('usernames').doc(username.toLowerCase()).get(),
+      12000,
+      'TIMEOUT'
+    );
+    if(!doc.exists || !doc.data().email){
+      throw new Error('No account found for that username.');
+    }
+    const email = doc.data().email;
+    await withTimeout(
+      auth.signInWithEmailAndPassword(email, password),
+      12000,
+      'TIMEOUT'
+    );
+    // onAuthStateChanged below takes over from here
+  } catch (err) {
+    submitBtn.disabled = false;
+    if(err.message === 'TIMEOUT'){
+      setMessage('login-message', 'Taking too long to reach the server. If you opened this file directly (file://), try running it through a local server instead.', 'error');
+    } else {
+      setMessage('login-message', 'XtremeGang autorization failed.', 'error');
+    }
+    drawCaptcha();
+    document.getElementById('login-captcha').value = '';
+  }
+});
+
+/* =========================================================
+   SESSION STATE
+   ========================================================= */
+let registrationInProgress = false;
+
+auth.onAuthStateChanged((user) => {
+  const authScreen = document.getElementById('auth-screen');
+  const mainSite = document.getElementById('main-site');
+  const introScreen = document.getElementById('intro-screen');
+
+  if(user){
+    if(registrationInProgress) return; // account just created mid-signup, not a real login yet
+    document.getElementById('profile-name').textContent = user.displayName || 'Member';
+    document.getElementById('profile-pic').src =
+      user.photoURL || `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(user.uid)}`;
+
+    if(!introScreen.classList.contains('hidden')) return; // still mid intro
+    authScreen.classList.add('hidden');
+    mainSite.classList.remove('hidden');
+  } else {
+    mainSite.classList.add('hidden');
+  }
+});
+
+document.getElementById('logout-btn').addEventListener('click', () => {
+  auth.signOut().then(() => {
+    document.getElementById('main-site').classList.add('hidden');
+    document.getElementById('auth-screen').classList.remove('hidden');
+    document.getElementById('login-form').reset();
+    drawCaptcha();
+  });
+});
+
+/* =========================================================
+   BOOT
+   ========================================================= */
+window.addEventListener('DOMContentLoaded', () => {
+  drawCaptcha();
+  runIntro();
+});
+</script>
+</body>
+</html>
