@@ -928,7 +928,15 @@ function runIntro(){
     document.getElementById('intro-screen').style.opacity = '0';
     setTimeout(() => {
       document.getElementById('intro-screen').classList.add('hidden');
-      document.getElementById('auth-screen').classList.remove('hidden');
+      // If a login already resolved while the intro was still playing
+      // (e.g. a cached/fast session), go straight to the main site
+      // instead of showing the login form again.
+      if(pendingLoggedInUser){
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('main-site').classList.remove('hidden');
+      } else {
+        document.getElementById('auth-screen').classList.remove('hidden');
+      }
     }, 500);
   }, TOTAL_MS + 1500);
 }
@@ -1150,11 +1158,11 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
    SESSION STATE
    ========================================================= */
 let registrationInProgress = false;
+let pendingLoggedInUser = false; // set by onAuthStateChanged if login resolves while intro is still playing
 
 auth.onAuthStateChanged((user) => {
   const authScreen = document.getElementById('auth-screen');
   const mainSite = document.getElementById('main-site');
-  const introScreen = document.getElementById('intro-screen');
 
   if(user){
     if(registrationInProgress) return; // account just created mid-signup, not a real login yet
@@ -1162,10 +1170,17 @@ auth.onAuthStateChanged((user) => {
     document.getElementById('profile-pic').src =
       user.photoURL || `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(user.uid)}`;
 
-    if(!introScreen.classList.contains('hidden')) return; // still mid intro
+    // If intro is still playing, don't switch screens yet — just remember
+    // that we're logged in. The intro's own completion step checks this
+    // flag and reveals main-site directly instead of showing the login
+    // form, so a cached/fast login can never get stuck behind the intro.
+    pendingLoggedInUser = true;
+    if(!document.getElementById('intro-screen').classList.contains('hidden')) return;
+
     authScreen.classList.add('hidden');
     mainSite.classList.remove('hidden');
   } else {
+    pendingLoggedInUser = false;
     mainSite.classList.add('hidden');
   }
 });
