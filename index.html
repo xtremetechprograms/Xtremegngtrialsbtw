@@ -6,6 +6,8 @@
 <title>XtremeGang</title>
 <link rel="icon" type="image/png" href="https://github.com/xtremetechprograms/Xtremegngtrialsbtw/blob/main/ChatGPT%20Image%20Aug%209,%202026,%2012_34_55%20PM.png?raw=true">
 
+<link rel="preload" as="image" href="https://cdn.jsdelivr.net/gh/xtremetechprograms/TIERLIST-ICONS@main/XtremeGAngbg.jpg">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -508,6 +510,14 @@ input{font-family:inherit;}
   padding:6px 12px 6px 6px;
   border:1px solid var(--line);
   background:var(--bg-panel-2);
+  position:relative;
+  cursor:pointer;
+  user-select:none;
+}
+.profile-chip:hover,
+.profile-chip.open{
+  border-color:var(--neon-blue);
+  box-shadow:0 0 12px rgba(34,211,255,0.25);
 }
 .profile-chip img{
   width:30px; height:30px; border-radius:50%;
@@ -516,13 +526,43 @@ input{font-family:inherit;}
 }
 .profile-chip span{ font-size:0.85rem; font-weight:600; }
 
+.profile-dropdown{
+  position:absolute;
+  top:calc(100% + 8px); right:0;
+  min-width:200px;
+  background:var(--bg-panel-2);
+  border:1px solid var(--line);
+  border-top:2px solid var(--neon-blue);
+  display:none;
+  flex-direction:column;
+  padding:6px 0;
+  box-shadow:0 12px 30px rgba(0,0,0,0.6);
+  z-index:70;
+}
+.profile-dropdown.open{ display:flex; }
+.profile-dropdown button{
+  background:none;
+  border:none;
+  text-align:left;
+  width:100%;
+  padding:10px 16px;
+  font-size:0.82rem;
+  font-family:var(--font-body);
+  letter-spacing:0.5px;
+  color:var(--text-mid);
+}
+.profile-dropdown button:hover{ color:var(--neon-blue); background:rgba(34,211,255,0.06); }
+.profile-dropdown button.logout-option{ color:var(--neon-red); }
+.profile-dropdown button.logout-option:hover{ color:var(--neon-red); background:rgba(255,45,85,0.08); }
+.profile-dropdown .divider{ height:1px; background:var(--line); margin:6px 0; }
+
 .hero{
   padding:90px 28px;
   text-align:center;
   position:relative;
   background-image:
     linear-gradient(180deg, rgba(5,5,11,0.55) 0%, rgba(5,5,11,0.75) 55%, rgba(5,5,11,1) 100%),
-    url("https://raw.githubusercontent.com/xtremetechprograms/TIERLIST-ICONS/main/XtremeGAngbg.jpg");
+    url("https://cdn.jsdelivr.net/gh/xtremetechprograms/TIERLIST-ICONS@main/XtremeGAngbg.jpg");
   background-size:cover;
   background-position:center;
   background-repeat:no-repeat;
@@ -700,9 +740,16 @@ input{font-family:inherit;}
       </li>
     </ul>
 
-    <div class="profile-chip">
+    <div class="profile-chip" id="profile-chip" tabindex="0">
       <img id="profile-pic" src="https://api.dicebear.com/7.x/identicon/svg?seed=guest" alt="">
       <span id="profile-name">Guest</span>
+
+      <div class="profile-dropdown" id="profile-dropdown">
+        <button type="button" id="edit-profile-btn">Edit profile</button>
+        <button type="button" id="points-btn">Points</button>
+        <div class="divider"></div>
+        <button type="button" class="logout-option" id="logout-btn">Log out</button>
+      </div>
     </div>
   </nav>
 
@@ -711,7 +758,7 @@ input{font-family:inherit;}
     <p>Dominate the fields together. Earn points, climb the rankings, and let XtremeAI handle whatever's holding you up.</p>
     <div class="hero-actions">
       <button class="btn-ghost" onclick="location.hash='#leaderboard'">View Leaderboard</button>
-      <button class="btn-solid" id="logout-btn">Log out</button>
+      <button class="btn-solid" onclick="location.hash='#rules'">Rules</button>
     </div>
   </section>
 </div>
@@ -1123,13 +1170,51 @@ auth.onAuthStateChanged((user) => {
   }
 });
 
-document.getElementById('logout-btn').addEventListener('click', () => {
-  auth.signOut().then(() => {
-    document.getElementById('main-site').classList.add('hidden');
-    document.getElementById('auth-screen').classList.remove('hidden');
-    document.getElementById('login-form').reset();
-    drawCaptcha();
+const logoutBtn = document.getElementById('logout-btn');
+if(logoutBtn){
+  logoutBtn.addEventListener('click', () => {
+    auth.signOut().then(() => {
+      document.getElementById('main-site').classList.add('hidden');
+      document.getElementById('auth-screen').classList.remove('hidden');
+      document.getElementById('login-form').reset();
+      drawCaptcha();
+    });
   });
+}
+
+/* =========================================================
+   PROFILE DROPDOWN
+   ========================================================= */
+const profileChip = document.getElementById('profile-chip');
+const profileDropdown = document.getElementById('profile-dropdown');
+
+function closeProfileDropdown(){
+  profileDropdown.classList.remove('open');
+  profileChip.classList.remove('open');
+}
+function toggleProfileDropdown(e){
+  e.stopPropagation();
+  const isOpen = profileDropdown.classList.toggle('open');
+  profileChip.classList.toggle('open', isOpen);
+}
+
+profileChip.addEventListener('click', toggleProfileDropdown);
+document.addEventListener('click', (e) => {
+  if(!profileChip.contains(e.target)) closeProfileDropdown();
+});
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape') closeProfileDropdown();
+});
+
+document.getElementById('edit-profile-btn').addEventListener('click', () => {
+  closeProfileDropdown();
+  // TODO: wire up to an actual edit-profile section/modal
+  location.hash = '#panel';
+});
+document.getElementById('points-btn').addEventListener('click', () => {
+  closeProfileDropdown();
+  // TODO: wire up to an actual points section
+  location.hash = '#points';
 });
 
 /* =========================================================
