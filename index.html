@@ -2208,12 +2208,23 @@ auth.onAuthStateChanged((user) => {
     if(registrationInProgress) return; // account just created mid-signup, not a real login yet
     document.getElementById('profile-name').textContent = user.displayName || 'Member';
     document.getElementById('profile-pic').src =
-      user.photoURL || `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(user.uid)}`;
+      `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(user.uid)}`;
 
     const sidebarPic = document.getElementById('ai-sidebar-pic');
     const sidebarId  = document.getElementById('ai-sidebar-id');
     if(sidebarPic) sidebarPic.src = document.getElementById('profile-pic').src;
     if(sidebarId)  sidebarId.textContent = user.displayName || 'Member';
+
+    // Custom avatar images live in Firestore (profiles/{uid}.avatarDataUrl),
+    // not in Firebase Auth's photoURL — that field is too small to hold an
+    // actual image. Apply it once it loads, if the person has set one.
+    db.collection('profiles').doc(user.uid).get().then(doc => {
+      const avatarUrl = doc.exists ? doc.data().avatarDataUrl : null;
+      if(avatarUrl){
+        document.getElementById('profile-pic').src = avatarUrl;
+        if(sidebarPic) sidebarPic.src = avatarUrl;
+      }
+    }).catch(() => { /* no profile doc yet — keep the default identicon */ });
 
     // If intro is still playing, don't switch screens yet — just remember
     // that we're logged in. The intro's own completion step checks this
@@ -2968,14 +2979,17 @@ function epPopulateForm(){
   if(!user) return;
 
   epUsername.value = user.displayName || '';
-  epAvatarPreview.src = user.photoURL ||
-    `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(user.uid)}`;
+  epAvatarPreview.src = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(user.uid)}`;
   epPendingAvatarDataUrl = null;
 
   db.collection('profiles').doc(user.uid).get().then(doc => {
-    epBio.value = (doc.exists && doc.data().bio) ? doc.data().bio : '';
+    const data = doc.exists ? doc.data() : {};
+    epBio.value = data.bio || '';
     epBioCount.textContent = epBio.value.length;
-  }).catch(() => { /* no profile doc yet — leave bio blank */ });
+    if(data.avatarDataUrl){
+      epAvatarPreview.src = data.avatarDataUrl;
+    }
+  }).catch(() => { /* no profile doc yet — leave defaults */ });
 }
 
 // populate whenever the Edit Profile tab is actually opened
@@ -3045,18 +3059,25 @@ if(epForm){
     epStatus.className = 'ep-status';
 
     try {
-      const profileUpdate = { displayName: newName };
-      if(epPendingAvatarDataUrl) profileUpdate.photoURL = epPendingAvatarDataUrl;
+      await user.updateProfile({ displayName: newName });
 
-      await user.updateProfile(profileUpdate);
-      await db.collection('profiles').doc(user.uid).set({
+      // Only include avatarDataUrl in the write if a new image was picked —
+      // omitting the key (rather than sending it as null/undefined) means
+      // merge:true leaves the existing saved avatar untouched otherwise.
+      const firestoreUpdate = {
         bio: epBio.value.trim(),
         updatedAt: Date.now()
-      }, { merge: true });
+      };
+      if(epPendingAvatarDataUrl){
+        firestoreUpdate.avatarDataUrl = epPendingAvatarDataUrl;
+      }
+      await db.collection('profiles').doc(user.uid).set(firestoreUpdate, { merge: true });
 
       // reflect changes across the site immediately without a reload
       document.getElementById('profile-name').textContent = newName;
-      document.getElementById('profile-pic').src = user.photoURL || document.getElementById('profile-pic').src;
+      if(epPendingAvatarDataUrl){
+        document.getElementById('profile-pic').src = epPendingAvatarDataUrl;
+      }
       const sidebarPic = document.getElementById('ai-sidebar-pic');
       const sidebarId  = document.getElementById('ai-sidebar-id');
       if(sidebarPic) sidebarPic.src = document.getElementById('profile-pic').src;
@@ -3066,6 +3087,7 @@ if(epForm){
       epStatus.textContent = 'Saved!';
       epStatus.className = 'ep-status success';
     } catch(err){
+      console.error('Profile save failed:', err);
       epStatus.textContent = 'Could not save changes — try again.';
       epStatus.className = 'ep-status error';
     } finally {
