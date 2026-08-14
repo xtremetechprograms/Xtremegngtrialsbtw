@@ -657,6 +657,152 @@ input{font-family:inherit;}
 .about-actions{ margin-top:48px; display:flex; justify-content:center; }
 
 /* =========================================================
+   WORK LIBRARIES
+   ---------------------------------------------------------
+   Full-height background image behind the whole section.
+   Every member gets an auto-created library, shown as a
+   long row (avatar + "{name}'s Library"); clicking a row
+   expands that member's subject list underneath it.
+   ========================================================= */
+.libraries-section{
+  position:relative;
+  min-height:calc(100vh - 64px);
+  padding:0;
+  overflow:hidden;
+  background-image:
+    linear-gradient(180deg, rgba(5,5,11,0.6) 0%, rgba(5,5,11,0.72) 55%, rgba(5,5,11,0.88) 100%),
+    url("https://static.vecteezy.com/system/resources/thumbnails/049/855/932/small/stunning-high-resolution-nature-and-landscape-backgrounds-breathtaking-scenery-in-hd-free-photo.jpg");
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+  background-attachment:fixed;
+}
+/* Higher specificity than the base .tab-section.active{display:block}
+   rule so this tab gets flex centering ONLY while it's the active tab —
+   this is what keeps it from bleeding into every other tab. */
+.tab-section.libraries-section.active{
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+}
+@media (max-width:900px){
+  /* background-attachment:fixed is unreliable on mobile browsers */
+  .libraries-section{ background-attachment:scroll; }
+}
+
+.libraries-content{
+  width:100%;
+  max-width:640px;
+  margin:0 auto;
+  padding:80px 28px 100px;
+}
+
+.libraries-heading{
+  text-align:center;
+  font-family:var(--font-display);
+  font-size:clamp(1.6rem,4.5vw,2.2rem);
+  font-weight:900;
+  letter-spacing:1px;
+}
+.libraries-sub{
+  margin-top:10px;
+  text-align:center;
+  color:var(--text-mid);
+  font-size:0.95rem;
+}
+
+.libraries-list{
+  margin-top:36px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.libraries-loading, .libraries-empty-msg{
+  text-align:center;
+  color:var(--text-mid);
+  font-size:0.9rem;
+  padding:30px 16px;
+}
+
+.library-member{ width:100%; }
+
+.library-row{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:16px;
+  padding:14px 22px;
+  background:rgba(10,10,18,0.6);
+  border:1px solid var(--line);
+  cursor:pointer;
+  transition:border-color .2s, box-shadow .2s, background .2s;
+}
+.library-row:hover{
+  border-color:var(--neon-blue);
+  box-shadow:0 0 18px rgba(34,211,255,0.2);
+}
+.library-row.open{
+  border-color:var(--neon-blue);
+  background:rgba(34,211,255,0.08);
+}
+
+.library-row-avatar{
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  border:2px solid var(--neon-blue);
+  box-shadow:0 0 10px rgba(34,211,255,0.3);
+  object-fit:cover;
+  flex-shrink:0;
+}
+.library-row-name{
+  flex:1;
+  text-align:left;
+  font-family:var(--font-display);
+  font-size:0.92rem;
+  letter-spacing:0.5px;
+  color:var(--text-hi);
+}
+.library-row-arrow{
+  color:var(--neon-blue);
+  font-size:0.9rem;
+  transition:transform .2s;
+  flex-shrink:0;
+}
+.library-row.open .library-row-arrow{ transform:rotate(90deg); }
+
+.library-row-subjects{
+  margin-top:10px;
+  padding-left:14px;
+  border-left:2px solid rgba(34,211,255,0.35);
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.library-row-subjects.hidden{ display:none; }
+
+.subject-btn{
+  width:100%;
+  padding:14px 22px;
+  background:rgba(10,10,18,0.6);
+  border:1px solid var(--line);
+  color:var(--text-hi);
+  font-family:var(--font-display);
+  font-size:0.85rem;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  text-align:left;
+  cursor:pointer;
+  transition:border-color .2s, box-shadow .2s, background .2s, transform .2s;
+}
+.subject-btn:hover{
+  border-color:var(--neon-blue);
+  box-shadow:0 0 16px rgba(34,211,255,0.25);
+  background:rgba(34,211,255,0.08);
+  transform:translateX(4px);
+}
+
+/* =========================================================
    XTREMEAI CHAT
    ---------------------------------------------------------
    Full-bleed layout beneath the navbar: left sidebar for
@@ -1106,6 +1252,179 @@ input{font-family:inherit;}
   min-height:1.2em;
 }
 
+/* --- subject photos modal --- */
+.sp-upload-row{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-bottom:24px;
+}
+.sp-upload-row.hidden{ display:none; }
+.sp-upload-status{
+  font-size:0.8rem;
+  color:var(--text-mid);
+}
+
+.sp-photo-grid{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:12px;
+}
+@media (max-width:520px){
+  .sp-photo-grid{ grid-template-columns:repeat(2, 1fr); }
+}
+
+.sp-photo-item{
+  position:relative;
+  aspect-ratio:1;
+  border:1px solid var(--line);
+  overflow:hidden;
+}
+.sp-photo-item img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.sp-photo-delete{
+  position:absolute;
+  top:6px; right:6px;
+  width:26px; height:26px;
+  border-radius:50%;
+  border:1px solid var(--neon-red);
+  background:rgba(5,5,11,0.75);
+  color:var(--neon-red);
+  font-size:1rem;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:box-shadow .2s, background .2s;
+}
+.sp-photo-delete:hover{
+  background:var(--neon-red);
+  color:#0a0a12;
+  box-shadow:0 0 12px rgba(255,45,85,0.5);
+}
+
+.sp-empty-msg{
+  text-align:center;
+  color:var(--text-mid);
+  font-size:0.9rem;
+  padding:30px 16px;
+}
+.sp-empty-msg.hidden{ display:none; }
+
+/* --- fullscreen photo lightbox --- */
+.lightbox-overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:300; /* above .modal-overlay (200) */
+  background:rgba(2,2,6,0.96);
+  flex-direction:column;
+}
+.lightbox-overlay.open{ display:flex; }
+
+.lightbox-topbar{
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 18px;
+  gap:12px;
+}
+.lightbox-counter{
+  font-family:var(--font-mono);
+  font-size:0.8rem;
+  letter-spacing:1px;
+  color:var(--text-mid);
+}
+.lightbox-controls{ display:flex; align-items:center; gap:8px; }
+.lightbox-btn{
+  min-width:38px;
+  height:38px;
+  padding:0 10px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,0.04);
+  color:var(--text-hi);
+  font-family:var(--font-display);
+  font-size:1rem;
+  line-height:1;
+  cursor:pointer;
+  transition:border-color .2s, box-shadow .2s, color .2s;
+}
+.lightbox-btn:hover{
+  border-color:var(--neon-blue);
+  color:var(--neon-blue);
+  box-shadow:0 0 10px rgba(34,211,255,0.3);
+}
+.lightbox-btn.lightbox-minimize:hover{
+  border-color:var(--neon-red);
+  color:var(--neon-red);
+  box-shadow:0 0 10px rgba(255,45,85,0.3);
+}
+
+.lightbox-stage{
+  flex:1;
+  position:relative;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:grab;
+  touch-action:none;
+  user-select:none;
+}
+.lightbox-stage.dragging{ cursor:grabbing; }
+.lightbox-stage img{
+  max-width:92vw;
+  max-height:80vh;
+  object-fit:contain;
+  will-change:transform;
+  transform-origin:center center;
+  pointer-events:none; /* dragging is handled on the stage, not the img */
+}
+.lightbox-stage img.animated{ transition:transform .18s ease; }
+
+.lightbox-nav{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:2;
+  width:46px;
+  height:46px;
+  border-radius:50%;
+  border:1px solid var(--line);
+  background:rgba(5,5,11,0.6);
+  color:var(--text-hi);
+  font-size:1.6rem;
+  line-height:1;
+  cursor:pointer;
+  transition:border-color .2s, box-shadow .2s, color .2s;
+}
+.lightbox-nav:hover{
+  border-color:var(--neon-blue);
+  color:var(--neon-blue);
+  box-shadow:0 0 14px rgba(34,211,255,0.35);
+}
+.lightbox-nav.hidden{ display:none; }
+.lightbox-prev{ left:16px; }
+.lightbox-next{ right:16px; }
+
+.lightbox-hint{
+  flex-shrink:0;
+  text-align:center;
+  padding:10px 16px 16px;
+  font-size:0.75rem;
+  color:var(--text-low);
+}
+@media (max-width:640px){
+  .lightbox-nav{ width:38px; height:38px; font-size:1.3rem; }
+  .lightbox-hint{ display:none; }
+}
+
 /* --- modal detail view (per-tier rank breakdown) --- */
 .modal-detail-view.hidden,
 #modal-tier-select-view.hidden{ display:none; }
@@ -1312,6 +1631,88 @@ input{font-family:inherit;}
   gap:8px;
 }
 .lb-member-points .rank-row-chip{ font-size:0.75rem; }
+
+/* =========================================================
+   PERSONAL PANEL
+   ---------------------------------------------------------
+   Read-only account overview — distinct from Edit Profile
+   (which is the editing form, opened separately via the
+   profile chip dropdown).
+   ========================================================= */
+.personal-panel-section{ padding:80px 28px 100px; }
+.personal-panel-inner{
+  max-width:520px;
+  margin:0 auto;
+}
+.personal-panel-title{
+  text-align:center;
+  font-family:var(--font-display);
+  font-size:clamp(1.6rem,4.5vw,2.2rem);
+  font-weight:900;
+  letter-spacing:1px;
+  margin-bottom:36px;
+}
+.pp-card{
+  border:1px solid var(--line);
+  background:var(--bg-panel-2);
+  padding:32px 28px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  gap:6px;
+}
+.pp-avatar{
+  width:88px;
+  height:88px;
+  border-radius:50%;
+  border:2px solid var(--neon-blue);
+  box-shadow:0 0 16px rgba(34,211,255,0.3);
+  object-fit:cover;
+  margin-bottom:14px;
+}
+.pp-name{
+  font-family:var(--font-display);
+  font-size:1.2rem;
+  letter-spacing:0.5px;
+  color:var(--text-hi);
+}
+.pp-email{
+  font-size:0.85rem;
+  color:var(--text-mid);
+}
+.pp-stats{
+  margin-top:22px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  width:100%;
+}
+.pp-stat{
+  border:1px solid var(--line);
+  padding:14px 10px;
+}
+.pp-stat-label{
+  font-family:var(--font-mono);
+  font-size:0.68rem;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  color:var(--text-low);
+}
+.pp-stat-value{
+  margin-top:4px;
+  font-family:var(--font-display);
+  font-size:1.2rem;
+  color:var(--neon-blue);
+  text-shadow:0 0 10px rgba(34,211,255,0.4);
+}
+.pp-actions{
+  margin-top:28px;
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
 
 /* =========================================================
    EDIT PROFILE
@@ -1545,7 +1946,7 @@ input{font-family:inherit;}
           <a href="#rankings">Rankings</a>
           <a href="#payment">Payment App</a>
           <a href="#bank">Bank Account</a>
-          <a href="#panel">Personal Panel</a>
+          <a href="#personal-panel">Personal Panel</a>
           <a href="#chats">XtremeChats</a>
         </div>
       </li>
@@ -1598,6 +1999,16 @@ input{font-family:inherit;}
 
       <div class="about-actions">
         <button class="btn-solid" onclick="location.hash='#home'">Back to Home</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="tab-section libraries-section" id="libraries">
+    <div class="libraries-content">
+      <h2 class="libraries-heading"><span class="hx">Work</span> <span class="hg">Libraries</span></h2>
+      <p class="libraries-sub">Every member gets their own library, auto-created the moment they join.</p>
+      <div class="libraries-list" id="libraries-list">
+        <p class="libraries-loading" id="libraries-loading">Loading libraries…</p>
       </div>
     </div>
   </section>
@@ -1730,6 +2141,34 @@ input{font-family:inherit;}
     </div>
   </section>
 
+  <section class="tab-section personal-panel-section" id="personal-panel">
+    <div class="personal-panel-inner">
+      <h2 class="personal-panel-title"><span class="hx">Personal</span> <span class="hg">Panel</span></h2>
+
+      <div class="pp-card">
+        <img class="pp-avatar" id="pp-avatar" src="https://api.dicebear.com/7.x/identicon/svg?seed=guest" alt="">
+        <div class="pp-name" id="pp-name">Guest</div>
+        <div class="pp-email" id="pp-email"></div>
+
+        <div class="pp-stats">
+          <div class="pp-stat">
+            <div class="pp-stat-label">Rank</div>
+            <div class="pp-stat-value" id="pp-rank">—</div>
+          </div>
+          <div class="pp-stat">
+            <div class="pp-stat-label">Points</div>
+            <div class="pp-stat-value" id="pp-points">—</div>
+          </div>
+        </div>
+
+        <div class="pp-actions">
+          <button type="button" class="btn-ghost" onclick="location.hash='#panel'">Edit Profile</button>
+          <button type="button" class="btn-solid" onclick="location.hash='#leaderboard'">View Leaderboard</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="tab-section edit-profile-section" id="panel">
     <div class="edit-profile-inner">
       <h2 class="edit-profile-title">
@@ -1776,6 +2215,47 @@ input{font-family:inherit;}
       </div>
       <div class="lb-member-points" id="lb-member-points"></div>
     </div>
+  </div>
+
+  <!-- SUBJECT PHOTOS MODAL -->
+  <div class="modal-overlay" id="subject-photos-overlay">
+    <div class="modal-box wide" id="subject-photos-box">
+      <button type="button" class="modal-close" id="subject-photos-close" aria-label="Close">&times;</button>
+      <h3 class="modal-title" id="subject-photos-title"></h3>
+
+      <div class="sp-upload-row hidden" id="sp-upload-row">
+        <input type="file" id="sp-photo-input" accept="image/*" hidden>
+        <button type="button" class="btn-ghost" id="sp-upload-btn">Upload Photo</button>
+        <span class="sp-upload-status" id="sp-upload-status"></span>
+      </div>
+
+      <div class="sp-photo-grid" id="sp-photo-grid">
+        <!-- photo thumbnails injected by JS -->
+      </div>
+      <p class="sp-empty-msg hidden" id="sp-empty-msg">No photos here yet.</p>
+    </div>
+  </div>
+
+  <!-- FULLSCREEN PHOTO LIGHTBOX -->
+  <div class="lightbox-overlay" id="lightbox-overlay">
+    <div class="lightbox-topbar">
+      <span class="lightbox-counter" id="lightbox-counter"></span>
+      <div class="lightbox-controls">
+        <button type="button" class="lightbox-btn" id="lightbox-zoom-out" aria-label="Zoom out">−</button>
+        <button type="button" class="lightbox-btn" id="lightbox-zoom-reset" aria-label="Reset zoom">1:1</button>
+        <button type="button" class="lightbox-btn" id="lightbox-zoom-in" aria-label="Zoom in">+</button>
+        <button type="button" class="lightbox-btn lightbox-minimize" id="lightbox-close" aria-label="Minimize">&times;</button>
+      </div>
+    </div>
+
+    <button type="button" class="lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="Previous photo">‹</button>
+    <button type="button" class="lightbox-nav lightbox-next" id="lightbox-next" aria-label="Next photo">›</button>
+
+    <div class="lightbox-stage" id="lightbox-stage">
+      <img id="lightbox-img" src="" alt="">
+    </div>
+
+    <p class="lightbox-hint">Scroll or swipe to page through photos · drag to pan when zoomed</p>
   </div>
 
   <!-- DETAILED RANKINGS MODAL -->
@@ -2209,6 +2689,7 @@ auth.onAuthStateChanged((user) => {
     document.getElementById('profile-name').textContent = user.displayName || 'Member';
     document.getElementById('profile-pic').src =
       `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(user.uid)}`;
+    syncPersonalPanel(user);
 
     const sidebarPic = document.getElementById('ai-sidebar-pic');
     const sidebarId  = document.getElementById('ai-sidebar-id');
@@ -2223,6 +2704,8 @@ auth.onAuthStateChanged((user) => {
       if(avatarUrl){
         document.getElementById('profile-pic').src = avatarUrl;
         if(sidebarPic) sidebarPic.src = avatarUrl;
+        const ppAvatar = document.getElementById('pp-avatar');
+        if(ppAvatar) ppAvatar.src = avatarUrl;
       }
     }).catch(() => { /* no profile doc yet — keep the default identicon */ });
 
@@ -2808,6 +3291,7 @@ document.addEventListener('keydown', (e) => {
   if(e.key === 'Escape'){
     closeDetailedRankings();
     if(lbMemberOverlay) lbMemberOverlay.classList.remove('open');
+    if(typeof closeSubjectPhotos === 'function') closeSubjectPhotos();
   }
 });
 
@@ -2860,6 +3344,34 @@ const LEADERBOARD_DATA = [
     breakdown: []
   },
 ];
+
+/* =========================================================
+   PERSONAL PANEL
+   ---------------------------------------------------------
+   Fills in the read-only account overview (avatar, name,
+   email, rank, points). This is a separate section from
+   Edit Profile — that one stays the editing form; this one
+   is just a summary view. Called on login and whenever the
+   avatar/name changes.
+   ========================================================= */
+function syncPersonalPanel(user){
+  if(!user) return;
+  const ppAvatar = document.getElementById('pp-avatar');
+  const ppName = document.getElementById('pp-name');
+  const ppEmail = document.getElementById('pp-email');
+  const ppRank = document.getElementById('pp-rank');
+  const ppPoints = document.getElementById('pp-points');
+
+  if(ppAvatar) ppAvatar.src = document.getElementById('profile-pic').src;
+  if(ppName) ppName.textContent = user.displayName || 'Member';
+  if(ppEmail) ppEmail.textContent = user.email || '';
+
+  const entry = LEADERBOARD_DATA.find(m =>
+    m.username.toLowerCase() === (user.displayName || '').toLowerCase()
+  );
+  if(ppRank) ppRank.textContent = entry ? entry.rankName : '—';
+  if(ppPoints) ppPoints.textContent = entry ? entry.points : '—';
+}
 
 const leaderboardRowsEl = document.getElementById('leaderboard-rows');
 
@@ -2916,6 +3428,142 @@ function renderLeaderboard(){
 }
 renderLeaderboard();
 
+/* =========================================================
+   WORK LIBRARIES
+   ---------------------------------------------------------
+   Every registered member gets an auto-created library.
+   Member list is pulled live from the 'usernames' collection
+   (written at signup — see the register handler above), so
+   new members appear here automatically with no manual data
+   entry. Each member's avatar comes from profiles/{uid} if
+   they've set a custom one, otherwise a generated identicon.
+
+   Subject list is sourced from subjects.txt — every member's
+   library currently shares this same subject list. Edit
+   SUBJECTS_LIST to change what shows up under each library.
+   ========================================================= */
+const SUBJECTS_LIST = [
+  'English Litreature',
+  'English Grammar',
+  'Hindi Lireature',
+  'Hindi Grammar',
+  'Mathematics',
+  'Science',
+  'History',
+  'Geography',
+  'Civics',
+  'Computer Science',
+  'Sanskrit',
+  'Moral Science',
+  'General Knowlegde',
+  'Drawing',
+  'Revision Assesments'
+];
+
+const librariesListEl = document.getElementById('libraries-list');
+const librariesLoadingEl = document.getElementById('libraries-loading');
+
+function buildSubjectsPanel(member){
+  const panel = document.createElement('div');
+  panel.className = 'library-row-subjects hidden';
+  SUBJECTS_LIST.forEach(subject => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'subject-btn';
+    btn.textContent = subject;
+    btn.addEventListener('click', () => openSubjectPhotos(member, subject));
+    panel.appendChild(btn);
+  });
+  return panel;
+}
+
+function buildLibraryRow(member){
+  const wrap = document.createElement('div');
+  wrap.className = 'library-member';
+
+  const row = document.createElement('button');
+  row.type = 'button';
+  row.className = 'library-row';
+
+  const avatar = document.createElement('img');
+  avatar.className = 'library-row-avatar';
+  avatar.src = member.avatarUrl;
+  avatar.alt = '';
+
+  const name = document.createElement('span');
+  name.className = 'library-row-name';
+  name.textContent = member.username + "'s Library";
+
+  const arrow = document.createElement('span');
+  arrow.className = 'library-row-arrow';
+  arrow.textContent = '▸';
+
+  row.appendChild(avatar);
+  row.appendChild(name);
+  row.appendChild(arrow);
+
+  const subjectsPanel = buildSubjectsPanel(member);
+
+  row.addEventListener('click', () => {
+    const isOpen = !subjectsPanel.classList.contains('hidden');
+    // accordion behavior: close any other open library before opening this one
+    librariesListEl.querySelectorAll('.library-row-subjects').forEach(p => {
+      if(p !== subjectsPanel) p.classList.add('hidden');
+    });
+    librariesListEl.querySelectorAll('.library-row').forEach(r => {
+      if(r !== row) r.classList.remove('open');
+    });
+    subjectsPanel.classList.toggle('hidden');
+    row.classList.toggle('open', !isOpen);
+  });
+
+  wrap.appendChild(row);
+  wrap.appendChild(subjectsPanel);
+  return wrap;
+}
+
+function renderLibraries(members){
+  if(!librariesListEl) return;
+  librariesListEl.innerHTML = '';
+
+  if(members.length === 0){
+    const empty = document.createElement('p');
+    empty.className = 'libraries-empty-msg';
+    empty.textContent = 'No libraries yet — be the first to join!';
+    librariesListEl.appendChild(empty);
+    return;
+  }
+
+  members
+    .sort((a, b) => a.username.localeCompare(b.username))
+    .forEach(member => librariesListEl.appendChild(buildLibraryRow(member)));
+}
+
+// Live-updates: any time someone registers (a new 'usernames' doc is
+// written) or updates their avatar, this list refreshes automatically
+// for everyone with the tab open — no page reload needed.
+db.collection('usernames').onSnapshot(async (snapshot) => {
+  const entries = snapshot.docs.map(doc => doc.data());
+
+  // Look up each member's custom avatar (profiles/{uid}.avatarDataUrl),
+  // falling back to a generated identicon if they haven't set one.
+  const members = await Promise.all(entries.map(async (entry) => {
+    let avatarUrl = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(entry.uid)}`;
+    try {
+      const profileDoc = await db.collection('profiles').doc(entry.uid).get();
+      if(profileDoc.exists && profileDoc.data().avatarDataUrl){
+        avatarUrl = profileDoc.data().avatarDataUrl;
+      }
+    } catch (err) { /* fall back to identicon */ }
+    return { username: entry.username, uid: entry.uid, avatarUrl };
+  }));
+
+  renderLibraries(members);
+}, (err) => {
+  console.error('Could not load libraries:', err);
+  if(librariesLoadingEl) librariesLoadingEl.textContent = 'Could not load libraries — try again later.';
+});
+
 // --- member detail panel ---
 const lbMemberOverlay = document.getElementById('lb-member-overlay');
 const lbMemberClose = document.getElementById('lb-member-close');
@@ -2953,6 +3601,347 @@ if(lbMemberOverlay){
     if(e.target === lbMemberOverlay) lbMemberOverlay.classList.remove('open');
   });
 }
+
+/* =========================================================
+   SUBJECT PHOTOS MODAL
+   ---------------------------------------------------------
+   Photos live in Firestore at libraries/{uid}/photos/{photoId},
+   each doc: { subject, dataUrl, createdAt }. Anyone can view a
+   member's subject photos; only that member (auth.currentUser.uid
+   === the library owner's uid) can upload or delete from it.
+
+   NOTE: this assumes Firestore security rules allow authenticated
+   reads on libraries -> photos subcollections, and writes only
+   where request.auth.uid matches the parent library's uid — that
+   needs to be set in the Firebase console alongside the existing
+   rules for 'profiles' and 'usernames'.
+   ========================================================= */
+const subjectPhotosOverlay = document.getElementById('subject-photos-overlay');
+const subjectPhotosClose = document.getElementById('subject-photos-close');
+const subjectPhotosTitle = document.getElementById('subject-photos-title');
+const spUploadRow = document.getElementById('sp-upload-row');
+const spPhotoInput = document.getElementById('sp-photo-input');
+const spUploadBtn = document.getElementById('sp-upload-btn');
+const spUploadStatus = document.getElementById('sp-upload-status');
+const spPhotoGrid = document.getElementById('sp-photo-grid');
+const spEmptyMsg = document.getElementById('sp-empty-msg');
+
+let spUnsubscribe = null; // detaches the live listener when the modal closes
+let spCurrentMember = null;
+let spCurrentSubject = null;
+
+function renderSubjectPhotos(photos, isOwner){
+  spPhotoGrid.innerHTML = '';
+
+  if(photos.length === 0){
+    spEmptyMsg.classList.remove('hidden');
+  } else {
+    spEmptyMsg.classList.add('hidden');
+  }
+
+  photos.forEach((photo, index) => {
+    const item = document.createElement('div');
+    item.className = 'sp-photo-item';
+
+    const img = document.createElement('img');
+    img.src = photo.dataUrl;
+    img.alt = '';
+    img.addEventListener('click', () => openLightbox(photos, index));
+    item.appendChild(img);
+
+    if(isOwner){
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'sp-photo-delete';
+      delBtn.setAttribute('aria-label', 'Delete photo');
+      delBtn.textContent = '×';
+      delBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        db.collection('libraries').doc(spCurrentMember.uid)
+          .collection('photos').doc(photo.id).delete()
+          .catch(err => console.error('Could not delete photo:', err));
+      });
+      item.appendChild(delBtn);
+    }
+
+    spPhotoGrid.appendChild(item);
+  });
+}
+
+function openSubjectPhotos(member, subject){
+  spCurrentMember = member;
+  spCurrentSubject = subject;
+
+  const isOwner = !!(auth.currentUser && auth.currentUser.uid === member.uid);
+
+  subjectPhotosTitle.textContent = member.username + "'s Library — " + subject;
+  spUploadRow.classList.toggle('hidden', !isOwner);
+  spUploadStatus.textContent = '';
+  spPhotoGrid.innerHTML = '';
+  spEmptyMsg.classList.add('hidden');
+
+  if(spUnsubscribe) spUnsubscribe();
+  spUnsubscribe = db.collection('libraries').doc(member.uid)
+    .collection('photos')
+    .where('subject', '==', subject)
+    .onSnapshot(snapshot => {
+      const photos = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .sort((a, b) => (a.createdAt?.toMillis?.() || 0) - (b.createdAt?.toMillis?.() || 0));
+      renderSubjectPhotos(photos, isOwner);
+    }, err => {
+      console.error('Could not load photos:', err);
+      spEmptyMsg.textContent = 'Could not load photos — try again later.';
+      spEmptyMsg.classList.remove('hidden');
+    });
+
+  subjectPhotosOverlay.classList.add('open');
+}
+
+function closeSubjectPhotos(){
+  subjectPhotosOverlay.classList.remove('open');
+  if(spUnsubscribe){ spUnsubscribe(); spUnsubscribe = null; }
+  spCurrentMember = null;
+  spCurrentSubject = null;
+  if(typeof closeLightbox === 'function') closeLightbox();
+}
+
+if(subjectPhotosClose){
+  subjectPhotosClose.addEventListener('click', closeSubjectPhotos);
+}
+if(subjectPhotosOverlay){
+  subjectPhotosOverlay.addEventListener('click', (e) => {
+    if(e.target === subjectPhotosOverlay) closeSubjectPhotos();
+  });
+}
+
+if(spUploadBtn){
+  spUploadBtn.addEventListener('click', () => spPhotoInput.click());
+}
+
+if(spPhotoInput){
+  spPhotoInput.addEventListener('change', () => {
+    const file = spPhotoInput.files[0];
+    if(!file || !spCurrentMember || !spCurrentSubject) return;
+
+    spUploadStatus.textContent = 'Uploading...';
+
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = () => {
+      img.onload = () => {
+        // scale down to a reasonable max dimension so it stays well
+        // under Firestore's per-document size limit
+        const maxSide = 800;
+        const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+
+        db.collection('libraries').doc(spCurrentMember.uid)
+          .collection('photos').add({
+            subject: spCurrentSubject,
+            dataUrl: dataUrl,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          })
+          .then(() => { spUploadStatus.textContent = ''; })
+          .catch(err => {
+            console.error('Could not upload photo:', err);
+            spUploadStatus.textContent = 'Upload failed — try again.';
+          });
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+    spPhotoInput.value = '';
+  });
+}
+
+/* =========================================================
+   FULLSCREEN PHOTO LIGHTBOX
+   ---------------------------------------------------------
+   Opened by clicking any thumbnail in the subject photos
+   grid. Supports zoom (buttons, mouse wheel, pinch), drag-
+   to-pan when zoomed in, and paging between photos via the
+   prev/next buttons, arrow keys, mouse wheel, or swipe.
+   ========================================================= */
+const lightboxOverlay = document.getElementById('lightbox-overlay');
+const lightboxImg = document.getElementById('lightbox-img');
+const lightboxStage = document.getElementById('lightbox-stage');
+const lightboxCounter = document.getElementById('lightbox-counter');
+const lightboxClose = document.getElementById('lightbox-close');
+const lightboxZoomIn = document.getElementById('lightbox-zoom-in');
+const lightboxZoomOut = document.getElementById('lightbox-zoom-out');
+const lightboxZoomReset = document.getElementById('lightbox-zoom-reset');
+const lightboxPrev = document.getElementById('lightbox-prev');
+const lightboxNext = document.getElementById('lightbox-next');
+
+let lbPhotos = [];
+let lbIndex = 0;
+let lbScale = 1;
+let lbPanX = 0;
+let lbPanY = 0;
+const LB_MIN_SCALE = 1;
+const LB_MAX_SCALE = 4;
+
+function lbApplyTransform(animated){
+  lightboxImg.classList.toggle('animated', !!animated);
+  lightboxImg.style.transform = `translate(${lbPanX}px, ${lbPanY}px) scale(${lbScale})`;
+}
+
+function lbSetZoom(newScale, animated){
+  lbScale = Math.min(LB_MAX_SCALE, Math.max(LB_MIN_SCALE, newScale));
+  if(lbScale === LB_MIN_SCALE){ lbPanX = 0; lbPanY = 0; }
+  lbApplyTransform(animated);
+  lightboxStage.style.cursor = lbScale > LB_MIN_SCALE ? 'grab' : 'default';
+}
+
+function lbShowPhoto(index, animated){
+  if(lbPhotos.length === 0) return;
+  lbIndex = ((index % lbPhotos.length) + lbPhotos.length) % lbPhotos.length; // wrap around
+  lightboxImg.src = lbPhotos[lbIndex].dataUrl;
+  lbSetZoom(1, animated);
+  lightboxCounter.textContent = (lbIndex + 1) + ' / ' + lbPhotos.length;
+
+  const multiple = lbPhotos.length > 1;
+  lightboxPrev.classList.toggle('hidden', !multiple);
+  lightboxNext.classList.toggle('hidden', !multiple);
+}
+
+function openLightbox(photos, index){
+  lbPhotos = photos;
+  lbShowPhoto(index, false);
+  lightboxOverlay.classList.add('open');
+}
+
+function closeLightbox(){
+  lightboxOverlay.classList.remove('open');
+  lbPhotos = [];
+}
+
+if(lightboxClose) lightboxClose.addEventListener('click', closeLightbox);
+if(lightboxZoomIn) lightboxZoomIn.addEventListener('click', () => lbSetZoom(lbScale + 0.5, true));
+if(lightboxZoomOut) lightboxZoomOut.addEventListener('click', () => lbSetZoom(lbScale - 0.5, true));
+if(lightboxZoomReset) lightboxZoomReset.addEventListener('click', () => lbSetZoom(1, true));
+if(lightboxPrev) lightboxPrev.addEventListener('click', () => lbShowPhoto(lbIndex - 1, false));
+if(lightboxNext) lightboxNext.addEventListener('click', () => lbShowPhoto(lbIndex + 1, false));
+
+// click the dark backdrop (not the image/topbar) to close, like the other modals
+if(lightboxOverlay){
+  lightboxOverlay.addEventListener('click', (e) => {
+    if(e.target === lightboxOverlay || e.target === lightboxStage) closeLightbox();
+  });
+}
+
+// double-click / double-tap to toggle zoom
+lightboxStage.addEventListener('dblclick', () => {
+  lbSetZoom(lbScale > LB_MIN_SCALE ? 1 : 2.5, true);
+});
+
+// mouse wheel: zoom while holding Ctrl (or on trackpad pinch, which browsers
+// report as wheel+ctrlKey); plain scroll pages to the next/previous photo
+let lbWheelCooldown = false;
+lightboxStage.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  if(e.ctrlKey){
+    lbSetZoom(lbScale - e.deltaY * 0.01, false);
+    return;
+  }
+  if(lbScale > LB_MIN_SCALE) return; // let panning happen naturally while zoomed
+  if(lbWheelCooldown) return;
+  lbWheelCooldown = true;
+  setTimeout(() => { lbWheelCooldown = false; }, 250);
+  if(e.deltaY > 0) lbShowPhoto(lbIndex + 1, false);
+  else if(e.deltaY < 0) lbShowPhoto(lbIndex - 1, false);
+}, { passive: false });
+
+// drag-to-pan when zoomed in (mouse)
+let lbDragging = false;
+let lbDragStartX = 0, lbDragStartY = 0, lbPanStartX = 0, lbPanStartY = 0;
+
+lightboxStage.addEventListener('mousedown', (e) => {
+  if(lbScale <= LB_MIN_SCALE) return;
+  lbDragging = true;
+  lightboxStage.classList.add('dragging');
+  lbDragStartX = e.clientX; lbDragStartY = e.clientY;
+  lbPanStartX = lbPanX; lbPanStartY = lbPanY;
+});
+window.addEventListener('mousemove', (e) => {
+  if(!lbDragging) return;
+  lbPanX = lbPanStartX + (e.clientX - lbDragStartX);
+  lbPanY = lbPanStartY + (e.clientY - lbDragStartY);
+  lbApplyTransform(false);
+});
+window.addEventListener('mouseup', () => {
+  lbDragging = false;
+  lightboxStage.classList.remove('dragging');
+});
+
+// touch support: single-finger swipe pages photos (or pans when zoomed),
+// two-finger pinch zooms
+let lbTouchStartX = 0, lbTouchStartY = 0;
+let lbTouchPanStartX = 0, lbTouchPanStartY = 0;
+let lbPinchStartDist = 0;
+let lbPinchStartScale = 1;
+
+function lbTouchDist(touches){
+  const dx = touches[0].clientX - touches[1].clientX;
+  const dy = touches[0].clientY - touches[1].clientY;
+  return Math.hypot(dx, dy);
+}
+
+lightboxStage.addEventListener('touchstart', (e) => {
+  if(e.touches.length === 2){
+    lbPinchStartDist = lbTouchDist(e.touches);
+    lbPinchStartScale = lbScale;
+  } else if(e.touches.length === 1){
+    lbTouchStartX = e.touches[0].clientX;
+    lbTouchStartY = e.touches[0].clientY;
+    lbTouchPanStartX = lbPanX;
+    lbTouchPanStartY = lbPanY;
+  }
+}, { passive: true });
+
+lightboxStage.addEventListener('touchmove', (e) => {
+  if(e.touches.length === 2){
+    const dist = lbTouchDist(e.touches);
+    lbSetZoom(lbPinchStartScale * (dist / lbPinchStartDist), false);
+  } else if(e.touches.length === 1 && lbScale > LB_MIN_SCALE){
+    // panning while zoomed in
+    lbPanX = lbTouchPanStartX + (e.touches[0].clientX - lbTouchStartX);
+    lbPanY = lbTouchPanStartY + (e.touches[0].clientY - lbTouchStartY);
+    lbApplyTransform(false);
+  }
+}, { passive: true });
+
+lightboxStage.addEventListener('touchend', (e) => {
+  if(lbScale > LB_MIN_SCALE) return; // don't page while zoomed in
+  if(e.changedTouches.length !== 1) return;
+  const dy = e.changedTouches[0].clientY - lbTouchStartY;
+  const dx = e.changedTouches[0].clientX - lbTouchStartX;
+  const SWIPE_THRESHOLD = 50;
+  // vertical swipe pages through photos; ignore mostly-horizontal swipes
+  if(Math.abs(dy) > SWIPE_THRESHOLD && Math.abs(dy) > Math.abs(dx)){
+    if(dy < 0) lbShowPhoto(lbIndex + 1, false);
+    else lbShowPhoto(lbIndex - 1, false);
+  }
+});
+
+// keyboard: Escape closes, arrows page, +/- zoom
+document.addEventListener('keydown', (e) => {
+  if(!lightboxOverlay.classList.contains('open')) return;
+  if(e.key === 'Escape') closeLightbox();
+  else if(e.key === 'ArrowDown' || e.key === 'ArrowRight') lbShowPhoto(lbIndex + 1, false);
+  else if(e.key === 'ArrowUp' || e.key === 'ArrowLeft') lbShowPhoto(lbIndex - 1, false);
+  else if(e.key === '+' || e.key === '=') lbSetZoom(lbScale + 0.5, true);
+  else if(e.key === '-') lbSetZoom(lbScale - 0.5, true);
+});
 
 /* =========================================================
    EDIT PROFILE
@@ -3059,6 +4048,13 @@ if(epForm){
     epStatus.className = 'ep-status';
 
     try {
+      // Force a fresh ID token before writing. The SDK normally handles this
+      // automatically, but a token that's gone stale while the tab was idle
+      // (or after the LOCAL->SESSION persistence fallback above) can cause
+      // accounts:update to reject the request with a 400 — refreshing here
+      // avoids that without changing anything else about the save flow.
+      await user.getIdToken(true);
+
       await user.updateProfile({ displayName: newName });
 
       // Only include avatarDataUrl in the write if a new image was picked —
@@ -3082,13 +4078,25 @@ if(epForm){
       const sidebarId  = document.getElementById('ai-sidebar-id');
       if(sidebarPic) sidebarPic.src = document.getElementById('profile-pic').src;
       if(sidebarId)  sidebarId.textContent = newName;
+      syncPersonalPanel(auth.currentUser);
 
       epPendingAvatarDataUrl = null;
       epStatus.textContent = 'Saved!';
       epStatus.className = 'ep-status success';
     } catch(err){
       console.error('Profile save failed:', err);
-      epStatus.textContent = 'Could not save changes — try again.';
+      // Show the specific Firebase error (e.g. auth/requires-recent-login)
+      // rather than a generic message, so the real cause is visible instead
+      // of hidden behind "try again".
+      let msg = 'Could not save changes — try again.';
+      if(err && err.code === 'auth/requires-recent-login'){
+        msg = 'This change needs a recent login. Please log out and back in, then try again.';
+      } else if(err && err.code){
+        msg = 'Could not save changes (' + err.code + ').';
+      } else if(err && err.message){
+        msg = 'Could not save changes: ' + err.message;
+      }
+      epStatus.textContent = msg;
       epStatus.className = 'ep-status error';
     } finally {
       epSaveBtn.disabled = false;
